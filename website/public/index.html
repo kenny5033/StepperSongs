@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stepper Songs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="scripts/paho-mqtt-min.js" defer></script>
+    <script src="scripts/mqtt-client.js" defer></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Stepper Songs</h1>
+            <div class="field">
+                <label class="label">Message</label>
+                <div class="control">
+                    <input class="input" type="text" id="messageInput" placeholder="Type your message here...">
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-primary" id="sendButton">Send</button>
+            </div>
+            <div class="notification is-info" id="messagesContainer">
+                <h2 class="subtitle">Messages:</h2>
+                <div id="messagesList"></div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

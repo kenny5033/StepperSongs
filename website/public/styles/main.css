@@ -1,0 +1,22 @@
+body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
+.header {
+    background-color: #00d1b2;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+.container {
+    margin-top: 2rem;
+}
+
+.message {
+    margin: 1rem 0;
+}
+
+.button {
+    margin-top: 1rem;
+}
