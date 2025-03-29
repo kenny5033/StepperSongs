@@ -20,3 +20,37 @@ body {
 .button {
     margin-top: 1rem;
 }
+
+.piano {
+    display: flex;
+    position: relative;
+    margin-top: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+    height: calc(100vh * 0.5);
+    width: 100%;
+}
+
+.key {
+    height: 100%;
+    border: 1px solid #000;
+    align-items: flex-end;
+    font-size: 2vw;
+    cursor: pointer;
+    user-select: none;
+}
+
+.key.white {
+    background: #fff;
+    z-index: 1;
+}
+
+.key.black {
+    background: #000;
+    color: #fff;
+    width: calc(100% / 20);
+    height: calc(100% / 2);
+    margin-left: calc(-100% / 35);
+    margin-right: calc(-100% / 35);
+    z-index: 2;
+}

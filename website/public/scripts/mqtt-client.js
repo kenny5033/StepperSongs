@@ -1,15 +1,38 @@
 const hostName = "test.mosquitto.org"
 const port = 8080; // MQTT over WebSockets, unencrypted, unauthenticated
-const clientID = "12345";
-const topic = `Stepper Songs/client${clientID}`;
+let topic = `Stepper Songs/null`;
+
+const updateTopic = () => {
+  const clientID = document.getElementById("clientIDInput").value;
+  if (clientID === "")
+    throw "ClientID is empty";
+
+  topic = `Stepper Songs/client${clientID}`;
+  console.log(`Changed topic to: ${topic}`);
+}
+
+const disableKeys = () => {
+  document.querySelectorAll('.key').forEach(key => {
+    key.classList.add('is-disabled');
+    key.disabled = true;
+  });
+}
+
+const enableKeys = () => {
+  document.querySelectorAll('.key').forEach(key => {
+    key.classList.remove('is-disabled');
+    key.disabled = false;
+  });
+}
+
+/* procedural code to be run at startup */
+disableKeys();
 
 // create a client instance
-const client = new Paho.MQTT.Client(hostName, port, "", clientID);
+const client = new Paho.MQTT.Client(hostName, port, "", "");
 
 // called when the client connects
 const onConnect = () => {
-  // subscript to the stepper songs topic
-  client.subscribe(topic);
   console.log("MQTT connected");
 }
 
@@ -35,12 +58,29 @@ client.onMessageArrived = onMessageArrived;
 // connect the client
 client.connect({onSuccess:onConnect});
 
-// setup callback for the button
-document.getElementById('sendButton').onclick = () => {
-  // make message from input field's value
-  const messageInput = document.getElementById('messageInput');
-  message = new Paho.MQTT.Message(messageInput.value);
-  message.destinationName = topic;
-  client.publish(message);
-  messageInput.value = ''; // clear value at end
-};
+// Add event listeners to piano keys to play them
+document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('click', () => {
+        if (!client.isConnected()) {
+            console.error("MQTT not connected");
+            return;
+        }
+        if (topic === `Stepper Songs/null`) {
+            console.error("No clientID set");
+            return
+        }
+        const note = key.dataset.note;
+        const message = new Paho.MQTT.Message(note);
+        message.destinationName = topic;
+        client.publish(message);
+        console.log(`Published note: ${note}`);
+    });
+});
+
+// setup connect and disconnect buttons
+document.getElementById("connectButton").addEventListener("click", () => {updateTopic(); enableKeys();});
+document.getElementById("disconnectButton").addEventListener("click", () => {
+  topic = `Stepper Songs/null`;
+  document.getElementById("clientIDInput").value = "";
+  disableKeys();
+});

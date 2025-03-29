@@ -1,6 +1,11 @@
 import paho.mqtt.client as mqtt
 from uuid import uuid4
 from signal import pause
+import sys
+import os
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../driver"))) # add driver directory to path
+# from driver import StepperSongsDriver
+import re
 
 # MQTT constants
 BROKER = "test.mosquitto.org"
@@ -22,6 +27,9 @@ class StepperSongsClient:
         # Connect to the broker
         self.client.connect(broker, port, 60)
 
+        # self.driver = StepperSongsDriver()
+        self.note_regex = re.compile(r"[A-G]#?")
+
     # cb for when the client connects to the broker
     def on_connect(self, client, userdata, flags, rc, properties) -> None:
         if rc == 0:
@@ -32,7 +40,14 @@ class StepperSongsClient:
 
     # cb for when a message is received
     def on_message(self, client, userdata, msg) -> None:
-        print(f"Received message: {msg.payload.decode()} on topic {msg.topic}")
+        note: str = str(msg.payload.decode()).upper()
+
+        if not self.note_regex.match(note):
+            self.client.publish("Invalid note")
+            return
+        
+        # self.driver.play_note(note)
+        print(f"Playing note: {note}")
 
     def run(self) -> None:
         self.client.loop_start() # starts in separate thread
@@ -53,4 +68,5 @@ if __name__ == "__main__":
         pause()
     except KeyboardInterrupt:
         print("Disconnecting from broker...")
+    finally:
         client.stop()

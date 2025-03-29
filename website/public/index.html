@@ -13,18 +13,30 @@
     <section class="section">
         <div class="container">
             <h1 class="title">Stepper Songs</h1>
-            <div class="field">
-                <label class="label">Message</label>
-                <div class="control">
-                    <input class="input" type="text" id="messageInput" placeholder="Type your message here...">
+            <div class="card">
+                <div class="card-header">
+                    <p class="card-header-title">About</p>
+                </div>
+                <div class="card-content">
+                    <p>Stepper Songs is a simple web application that allows you to play songs on a stepper motor. The stepper motor is connected to an Arduino board, which is connected to a MQTT broker. The web application sends messages to the MQTT broker, which are then received by the Arduino board and used to control the stepper motor.</p>
                 </div>
             </div>
-            <div class="control">
-                <button class="button is-primary" id="sendButton">Send</button>
-            </div>
-            <div class="notification is-info" id="messagesContainer">
-                <h2 class="subtitle">Messages:</h2>
-                <div id="messagesList"></div>
+            <input type="text" class="input" placeholder="Client ID" id="clientIDInput">
+            <button class="button is-primary" id="connectButton">Connect</button>
+            <button class="button is-danger" id="disconnectButton">Disconnect</button>
+            <div class="piano">
+                <button class="button is-fullwidth key white" data-note="C">C</button>
+                <button class="button is-fullwidth key black" data-note="C#">C#</button>
+                <button class="button is-fullwidth key white" data-note="D">D</button>
+                <button class="button is-fullwidth key black" data-note="D#">D#</button>
+                <button class="button is-fullwidth key white" data-note="E">E</button>
+                <button class="button is-fullwidth key white" data-note="F">F</button>
+                <button class="button is-fullwidth key black" data-note="F#">F#</button>
+                <button class="button is-fullwidth key white" data-note="G">G</button>
+                <button class="button is-fullwidth key black" data-note="G#">G#</button>
+                <button class="button is-fullwidth key white" data-note="A">A</button>
+                <button class="button is-fullwidth key black" data-note="A#">A#</button>
+                <button class="button is-fullwidth key white" data-note="B">B</button>
             </div>
         </div>
     </section>
