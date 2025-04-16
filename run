@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# check if the script is run as root
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root."
+    exit 1
+fi
+
+# copy the contents of the website directory to the web server's root directory
+cp -r website/public/* /var/www/html/
+
+# check if the copy was successful
+if [ $? -eq 0 ]; then
+    echo "Website files copied successfully."
+else
+    echo "Failed to copy website files."
+    exit 1
+fi
+
+# restart the lighttpd service to apply changes
+service lighttpd restart
+# check if the restart was successful
+if [ $? -eq 0 ]; then
+    echo "Lighttpd service restarted successfully."
+else
+    echo "Failed to restart Lighttpd service."
+    exit 1
+fi
+
+# start client
+cd client
+.venv/bin/python3 stepper_songs_client.py

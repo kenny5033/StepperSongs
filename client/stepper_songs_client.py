@@ -3,9 +3,10 @@ from uuid import uuid4
 from signal import pause
 import sys
 import os
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../driver"))) # add driver directory to path
-# from driver import StepperSongsDriver
 import re
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../driver"))) # add driver directory to path
+import driver
 
 # MQTT constants
 BROKER = "test.mosquitto.org"
@@ -46,8 +47,14 @@ class StepperSongsClient:
             self.client.publish("Invalid note")
             return
         
-        # self.driver.play_note(note)
-        print(f"Playing note: {note}")
+        note = driver.Note(note, 1)
+        try:
+            driver.send_note_via_serial(note)
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            return
+        
+        print(f"Playing note at frequency {note.frequency} HZ for {note.duration} seconds")
 
     def run(self) -> None:
         self.client.loop_start() # starts in separate thread

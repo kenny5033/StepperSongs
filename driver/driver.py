@@ -1,13 +1,12 @@
-from tmc_driver.tmc_2209 import *
-import RPi.GPIO as GPIO
-import time
+#########
+# This file bridges the Python client to the Arduino driver
+# over serial
+#########
+import struct
+import serial
+import os
 
-# TMC2209 config
-UART_PORT = "/dev/serial0"
-ENABLE_PIN = 21
-MOTION_CONTROL_PIN0 = 16
-MOTION_CONTROL_PIN1 = 20
-PWM_PIN = 18
+SERIAL_PORT = "/dev/ttyUSB0"  # serial port of the arduino
 
 # frequency (hz) by note
 NOTE_FREQUENCIES = {
@@ -25,44 +24,20 @@ NOTE_FREQUENCIES = {
     "B": 493.88,
 }
 
-class StepperSongsDriver:
-    def __init__(self) -> None:
-        self.tmc = Tmc2209(
-            TmcEnableControlPin(ENABLE_PIN),
-            TmcMotionControlStepDir(MOTION_CONTROL_PIN0, MOTION_CONTROL_PIN1),
-            TmcComUart(UART_PORT),
-        )
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(PWM_PIN, GPIO.OUT)
-        self.pwm = GPIO.PWM(PWM_PIN, 1)  # initialize with dummy frequency
-        self.pwm.start(0) # start with duty cycle of 0
-
-    # TODO: this code needs to be refactored to use the TMC2209 driver
-    def play_pwm_note(self, note: str, duration: float = 1.0) -> None:
-        """Plays a note using PWM for the specified duration."""
-        frequency = NOTE_FREQUENCIES.get(note)
-        if not frequency:
+class Note:
+    def __init__(self, note: str, duration: int):
+        if note not in NOTE_FREQUENCIES:
             raise ValueError(f"Invalid note: {note}")
 
-        print(f"Playing note: {note} ({frequency} Hz) for {duration} seconds")
-        self.pwm.ChangeFrequency(frequency)
-        self.pwm.ChangeDutyCycle(50)  # Set duty cycle to 50% for a square wave
-        time.sleep(duration)
-        self.pwm.ChangeDutyCycle(0)  # Stop the sound
+        self.frequency = NOTE_FREQUENCIES[note]
+        self.duration = duration
 
-    def cleanup(self):
-        """Clean up GPIO and PWM resources."""
-        self.pwm.stop()
-        GPIO.cleanup()
+    def to_bytes(self) -> None:
+        return struct.pack('BB', self.frequency, self.duration)
 
-if __name__ == "__main__":
-    driver = StepperSongsDriver()
+def send_note_via_serial(note, serial_port: str = SERIAL_PORT) -> None:
+    if not os.path.exists(serial_port):
+        raise FileNotFoundError(f"The serial port {serial_port} does not exist.")
 
-    try:
-        driver.play_pwm_note("C", 1.0)
-        driver.play_pwm_note("E", 1.0)
-        driver.play_pwm_note("G", 1.0)
-    except KeyboardInterrupt:
-        print("Stopping driver...")
-    finally:
-        driver.cleanup()
+    with serial.Serial(serial_port, 9600, timeout=1) as ser:
+        ser.write(note.to_bytes())
