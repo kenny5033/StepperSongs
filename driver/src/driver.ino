@@ -11,8 +11,8 @@ Make Music With Stepper Motors! By Whiteshadow11 https://www.instructables.com/M
 #define SERIAL_READ_DELAY 100
 
 typedef struct {
-  uint8_t frequency;
-  uint8_t duration;
+  uint16_t frequency;
+  uint16_t duration;
 } Note;
 
 // serial communication setup
@@ -20,12 +20,15 @@ typedef struct {
 // note is fairly small (2 bytes), so it should be fine
 Note receiveNote(bool block) {
   // wait until the two bytes are ready
-  if (Serial.available() >= 2) {
-    Note receivedNote;
-    receivedNote.frequency = Serial.read();
-    receivedNote.duration = Serial.read();
-    return receivedNote;
-  } else if (block) {
+  while (true) {
+    if (Serial.available() >= sizeof(Note)) {
+      Note receivedNote;
+      receivedNote.frequency = (Serial.read() << 8) | Serial.read();
+      receivedNote.duration = (Serial.read() << 8) | Serial.read();
+      return receivedNote;
+    } else if (!block) {
+      return (Note){0, 0};
+    }
     delay(SERIAL_READ_DELAY);
   }
 }
@@ -75,6 +78,15 @@ int oct=5; // octave
 void listenToSerial() {
   while (true) {
     Note n = receiveNote(true);
+    Serial.println("Received note");
+    Serial.print("Frequency: ");
+    Serial.print(n.frequency);
+    Serial.print(" Duration: ");
+    Serial.println(n.duration);
+    if (n.frequency == 0 && n.duration == 0) {
+      Serial.println("No note received");
+      continue;
+    }
     playNote(&n);
   }
 }
@@ -93,7 +105,7 @@ void loop() {
   oct=5;
 
   // to handle serial comms
-  // listenToSerial();
+  listenToSerial();
 
   ////Testing notes at different lengths
   // note(e1,250);
@@ -247,23 +259,23 @@ void loop() {
 }
 
 void note(int num,long dur) {
-  static int delay=(num*oct)/10; 
+  int delay=(num*oct)/10; 
 
   dir=!dir; // swap direction
   digitalWrite(DIR_PIN,dir);
 
   // calculate the number of steps to take
-  static int count=floor((dur*5*tempo)/delay);
+  int count=floor((dur*5*tempo)/delay);
 
   for(int _ = 0; _ < count; _++) {
-    digitalWrite(stepPin,HIGH);
+    digitalWrite(STEP_PIN,HIGH);
     delayMicroseconds(delay);
-    digitalWrite(stepPin,LOW);
+    digitalWrite(STEP_PIN,LOW);
     delayMicroseconds(delay);
   }
 }
 
-void playNote(Note* noteToPlay) {
+inline void playNote(Note* noteToPlay) {
   note((int)noteToPlay->frequency, (int)noteToPlay->duration);
 }
 
