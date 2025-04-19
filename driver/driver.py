@@ -24,6 +24,9 @@ NOTE_FREQUENCIES: list[int] = {
     "B":  1012,
 }
 
+with serial.Serial(SERIAL_PORT, baudrate=9600, timeout=1) as ser:
+    ser.read() # clear any existing data in the buffer
+
 class Note:
     def __init__(self, note: str, duration: int):
         if note not in NOTE_FREQUENCIES:
@@ -39,5 +42,10 @@ def send_note_via_serial(note, serial_port: str = SERIAL_PORT) -> None:
     if not os.path.exists(serial_port):
         raise FileNotFoundError(f"The serial port {serial_port} does not exist.")
 
-    with serial.Serial(serial_port, 9600, timeout=1) as ser:
-        ser.write(note.to_bytes())
+    try:
+        with serial.Serial(serial_port, baudrate=9600, timeout=1) as ser:
+            if not ser.is_open:
+                raise serial.SerialException("Failed to open serial port.")
+            ser.write(note.to_bytes())
+    except serial.SerialException as e:
+        print(f"Serial error: {e}")
