@@ -6,7 +6,7 @@ import os
 import re
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../driver"))) # add driver directory to path
-import driver
+from driver import Driver, Note
 
 # MQTT constants
 BROKER = "test.mosquitto.org"
@@ -28,7 +28,7 @@ class StepperSongsClient:
         # Connect to the broker
         self.client.connect(broker, port, 60)
 
-        # self.driver = StepperSongsDriver()
+        self.driver = Driver()
         self.note_regex = re.compile(r"[A-G]#?")
 
     # cb for when the client connects to the broker
@@ -47,9 +47,9 @@ class StepperSongsClient:
             self.client.publish("Invalid note")
             return
         
-        note = driver.Note(note, 1)
+        note = Note(note, 1000)
         try:
-            driver.send_note_via_serial(note)
+            self.driver.send_note_via_serial(note)
         except FileNotFoundError as e:
             print(f"Error: {e}")
             return

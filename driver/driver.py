@@ -31,21 +31,25 @@ class Note:
 
         self.frequency = NOTE_FREQUENCIES[note]
         self.duration = duration
-        self.ser = serial.Serial(SERIAL_PORT, baudrate=9600, timeout=1)
-
-    def __del__(self):
-        self.ser.close()
 
     def to_bytes(self) -> None:
         return struct.pack('>HH', self.frequency, self.duration)
+    
+class Driver:
+    def __init__(self):
+        self.ser = serial.Serial(SERIAL_PORT, baudrate=9600, timeout=1)
+    
+    def __del__(self):
+        if self.ser.is_open:
+            self.ser.close()
 
-    def send_note_via_serial(self, serial_port: str = SERIAL_PORT) -> None:
+    def send_note_via_serial(self, note: Note, serial_port: str = SERIAL_PORT) -> None:
         if not os.path.exists(serial_port):
             raise FileNotFoundError(f"The serial port {serial_port} does not exist.")
 
         try:
             if not self.ser.is_open:
                 raise serial.SerialException("Failed to open serial port.")
-            self.ser.write(self.to_bytes())
+            self.ser.write(note.to_bytes())
         except serial.SerialException as e:
             print(f"Serial error: {e}")
