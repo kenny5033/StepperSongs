@@ -1,5 +1,5 @@
-const hostName = "test.mosquitto.org"
-const port = 8080; // MQTT over WebSockets, unencrypted, unauthenticated
+const hostName = "iot.cs.calvin.edu"
+const port = 8080;
 let topic = `Stepper Songs/null`;
 
 const updateTopic = () => {
@@ -56,31 +56,62 @@ client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
 
 // connect the client
-client.connect({onSuccess:onConnect});
+
 
 // Add event listeners to piano keys to play them
+const defaultNoteDuration = 100; // milliseconds
 document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('click', () => {
-        if (!client.isConnected()) {
-            console.error("MQTT not connected");
-            return;
-        }
-        if (topic === `Stepper Songs/null`) {
-            console.error("No clientID set");
-            return
-        }
-        const note = key.dataset.note;
+    let intervalHandle;
+
+    // have the button continuously publish the note when pressed
+    // and stop when released
+    key.addEventListener('mousedown', () => {
+      if (!client.isConnected()) {
+        console.error("MQTT not connected");
+        return;
+      }
+      if (topic === `Stepper Songs/null`) {
+        console.error("No clientID set");
+        return;
+      }
+
+      const note = key.dataset.note + "--" + String(defaultNoteDuration);
+      intervalHandle = setInterval(() => {
         const message = new Paho.MQTT.Message(note);
         message.destinationName = topic;
         client.publish(message);
         console.log(`Published note: ${note}`);
+      }, defaultNoteDuration);
+    });
+
+    key.addEventListener('mouseup', () => {
+      clearInterval(intervalHandle);
+    });
+
+    key.addEventListener('mouseleave', () => {
+      clearInterval(intervalHandle);
     });
 });
 
 // setup connect and disconnect buttons
-document.getElementById("connectButton").addEventListener("click", () => {updateTopic(); enableKeys();});
+document.getElementById("connectButton").addEventListener("click", () => {
+  updateTopic();
+
+  const username = document.getElementById("usernameInput").value;
+  const password = document.getElementById("passwordInput").value;
+  client.connect({
+    userName: username,
+    password: password,
+    onSuccess: onConnect
+  });
+
+  enableKeys();
+});
+
 document.getElementById("disconnectButton").addEventListener("click", () => {
+  disableKeys();
   topic = `Stepper Songs/null`;
   document.getElementById("clientIDInput").value = "";
-  disableKeys();
+  client.disconnect();
+  console.log("MQTT disconnected");
 });

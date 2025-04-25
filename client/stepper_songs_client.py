@@ -1,19 +1,16 @@
 import paho.mqtt.client as mqtt
 from uuid import uuid4
-from signal import pause
-import sys
-import os
 import re
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../driver"))) # add driver directory to path
-from driver import Driver, Note
-
-# MQTT constants
-BROKER = "test.mosquitto.org"
-PORT = 1883
+from queue import Queue, Empty
+from driver.driver import Driver, Note
 
 class StepperSongsClient:
-    def __init__(self, broker: str, port: str, client_id: str = None) -> None:
+    '''
+    A client that connects to an MQTT broker and listens for notes to play.
+    Notes will be queued and sent to the driver for playback.
+    '''
+
+    def __init__(self, broker: str, port: str, username: str, password: str, client_id: str = None) -> None:
         # generate a 6-character client code, if not provided
         self.CLIENT_ID = client_id if client_id else str(uuid4().hex[:6])
         self.TOPIC = f"Stepper Songs/client{self.CLIENT_ID}"
@@ -26,10 +23,17 @@ class StepperSongsClient:
         self.client.on_message = self.on_message
 
         # Connect to the broker
+        self.client.username_pw_set(username, password=password)
         self.client.connect(broker, port, 60)
 
+        # setup driver related variables
         self.driver = Driver()
         self.note_regex = re.compile(r"[A-G]#?")
+        self.notes_queue: Queue[Note] = Queue()
+    
+    def __del__(self) -> None:
+        self.client.loop_stop()
+        self.client.disconnect()
 
     # cb for when the client connects to the broker
     def on_connect(self, client, userdata, flags, rc, properties) -> None:
@@ -41,39 +45,46 @@ class StepperSongsClient:
 
     # cb for when a message is received
     def on_message(self, client, userdata, msg) -> None:
-        note: str = str(msg.payload.decode()).upper()
+        recieved: str = str(msg.payload.decode()).upper()
+        info = recieved.split("--")
+        if len(info) != 2:
+            self.client.publish("Invalid message format")
+            return
+        
+        note = info[0]
+        duration = info[1]
+        if not duration.isdigit():
+            self.client.publish("Invalid duration")
+            return
+        
+        duration = int(duration)
+        if duration <= 0:
+            self.client.publish("Invalid duration")
+            return
 
         if not self.note_regex.match(note):
             self.client.publish("Invalid note")
             return
         
-        note = Note(note, 1000)
-        try:
-            self.driver.send_note_via_serial(note)
-        except FileNotFoundError as e:
-            print(f"Error: {e}")
-            return
-        
-        print(f"Playing note at frequency {note.frequency} HZ for {note.duration} seconds")
+        new_note = Note(note, duration)
+        self.notes_queue.put(new_note)
+        print(f"Received note: {note} for {duration} milliseconds")
 
     def run(self) -> None:
-        self.client.loop_start() # starts in separate thread
-    
-    def stop(self) -> None:
-        self.client.loop_stop()
-        self.client.disconnect()
-    
+        self.client.loop_start()  # starts in separate thread
+
+        # continually send notes to the driver
+        while True:
+            next_note = self.notes_queue.get(block=True)
+            try:
+                self.driver.send_note_via_serial(next_note)
+                print(f"Playing note at frequency {next_note.frequency} HZ for {next_note.duration} milliseconds")
+                print(f"Current queue length: {self.notes_queue.qsize()}")
+            except Exception as e:
+                print(e)
+            finally:
+                # succeed or fail, mark the queue item as done
+                self.notes_queue.task_done()
+
     def getClientID(self) -> str:
         return self.CLIENT_ID
-
-if __name__ == "__main__":
-    client = StepperSongsClient(BROKER, PORT, client_id="12345")
-
-    try:
-        client.run()
-        print(f"Client ID: {client.getClientID()}")
-        pause()
-    except KeyboardInterrupt:
-        print("Disconnecting from broker...")
-    finally:
-        client.stop()
