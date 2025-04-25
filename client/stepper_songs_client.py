@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 from uuid import uuid4
 import re
-from queue import Queue, Empty
+from queue import Queue
 from driver.driver import Driver, Note
 
 class StepperSongsClient:
@@ -82,9 +82,6 @@ class StepperSongsClient:
                 print(f"Current queue length: {self.notes_queue.qsize()}")
             except Exception as e:
                 print(e)
-            finally:
-                # succeed or fail, mark the queue item as done
-                self.notes_queue.task_done()
 
     def getClientID(self) -> str:
         return self.CLIENT_ID
