@@ -1,6 +1,6 @@
 # StepperSongs
 
-StepperSongs is a web-based application that allows users to play songs on a stepper motor. The stepper motor is controlled via an Arduino board, which receives commands via serial over USB, which themselves come from a client listening to an MQTT broker. The web application sends musical notes to the broker, which are then received by the client and sent to the Arudino to produce sound.
+StepperSongs is a web-based application that allows users to play songs on stepper motors. The stepper motors are controlled via an Arduino board, which receives commands via serial over USB, which themselves come from a client subscribed to an MQTT broker. A web application sends musical notes to the broker, which are then received by the client and sent to the Arudino to produce sound.
 
 ## Prerequisites
 
@@ -58,6 +58,7 @@ This script will also start the Python client backend.
 2. Enter your Client ID, MQTT username, and password.
 3. Click "Connect" to enable the virtual piano.
 4. Play notes by clicking on the piano keys.
+5. Notes can be held to produce a sustained note.
 
 ### Backend
 
@@ -90,4 +91,4 @@ pip3 install pyserial
 
 ## Acknowledgments
 
-Inspired by [Make Music With Stepper Motors!](https://www.instructables.com/Make-Music-With-Stepper-Motors/) by Whiteshadow11.
+Arduino code inspired by [Make Music With Stepper Motors!](https://www.instructables.com/Make-Music-With-Stepper-Motors/) by Whiteshadow11.
