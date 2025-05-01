@@ -1,3 +1,12 @@
+"""
+Driver Module
+--------------
+This module bridges the Python client to the Arduino over serial communication.
+It defines the Note class and the Driver class for sending musical notes to the Arduino.
+
+Kenny Howes - kenneth.howes53@gmail.com
+Omar Valdez - ov25@calvin.edu
+"""
 #########
 # This file bridges the Python client to the Arduino driver
 # over serial

@@ -1,3 +1,12 @@
+"""
+Stepper Songs Client
+---------------------
+This module defines the StepperSongsClient class, which connects to an MQTT broker,
+listens for musical notes, and sends them to the Arduino driver for playback on a stepper motor.
+
+Kenny Howes - kenneth.howes53@gmail.com
+Omar Valdez - ov25@calvin.edu
+"""
 import paho.mqtt.client as mqtt
 from uuid import uuid4
 import re

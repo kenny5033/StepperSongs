@@ -1,3 +1,13 @@
+/*
+MQTT Client Script
+-------------------
+This script handles the MQTT client connection for the web application.
+It allows users to send musical notes to the MQTT broker and interact with the virtual piano.
+
+Kenny Howes - kenneth.howes53@gmail.com
+Omar Valdez - ov25@calvin.edu
+*/
+
 const hostName = "iot.cs.calvin.edu"
 const port = 8080;
 let topic = `Stepper Songs/null`;

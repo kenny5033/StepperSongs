@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# -----------------------------------------------------------------------------
+# Description: This script is part of the StepperSongs project. It is intended 
+#              to execute or manage tasks related to the project.
+# Usage:       sudo ./run
+# Author:      Kenny Howes - kenneth.howes53@gmail.com
+#              Omar Valdez - ov25@calvin.edu
+# -----------------------------------------------------------------------------
+
 # check if the script is run as root
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root."
